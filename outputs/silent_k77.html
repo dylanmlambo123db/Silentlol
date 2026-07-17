@@ -666,9 +666,30 @@ body{
 let musicPlayer;
 
 function enterSite(){
+
     document.body.classList.add("entered");
-    document.getElementById("enter").style.display="none";
-    document.getElementById("main").style.display="flex";
+
+    const flash = document.getElementById("crossFlash");
+    const intro = document.getElementById("enter");
+
+    flash.animate([
+        { opacity: 0 },
+        { opacity: 1 },
+        { opacity: 0 }
+    ],{
+        duration:500,
+        easing:"ease-out"
+    });
+
+    setTimeout(()=>{
+        intro.style.transition="opacity 1.2s ease";
+        intro.style.opacity="0";
+
+        setTimeout(()=>{
+            intro.style.display="none";
+            document.getElementById("main").style.display="flex";
+        },1200);
+    },250);
 
     if(musicPlayer){
         musicPlayer.play();
