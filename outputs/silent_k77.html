@@ -36,7 +36,7 @@ body{
     background:
     radial-gradient(circle at top,#202020 0%,#050505 50%);
     transform:translate3d(calc(var(--move-x, 0) * -10px), calc(var(--move-y, 0) * -10px), 0) scale(1.04);
-    transition:transform .12s linear;
+    transition:transform .25s ease-out;
 }
 
 #enter{
@@ -547,6 +547,14 @@ body{
         transform:translate3d(calc(var(--snow-x) + var(--snow-drift)), calc(var(--snow-y) + 86px), 0) rotate(180deg) scale(.35);
     }
 }
+#flash{
+    position:fixed;
+    inset:0;
+    background:white;
+    opacity:0;
+    pointer-events:none;
+    z-index:2000;
+}
 </style>
 </head>
 <body>
@@ -556,7 +564,7 @@ body{
 <div class="glow g1"></div>
 <div class="glow g2"></div>
 <div class="diamond-cursor" id="diamondCursor"></div>
-
+<div id="flash"></div>
 <div class="enter-center">
     <img id="cross" src="cross.png" onclick="enterSite()">
 </div>
@@ -613,7 +621,16 @@ body{
 let musicPlayer;
 
 function enterSite(){
+const flash = document.getElementById("flash");
 
+flash.animate([
+    {opacity:0},
+    {opacity:1},
+    {opacity:0}
+],{
+    duration:600,
+    easing:"ease-out"
+});
     const cross = document.getElementById("cross");
 
     cross.animate([
@@ -632,8 +649,15 @@ function enterSite(){
     
 
     setTimeout(()=>{
-        intro.style.transition="opacity 1.2s ease";
-        intro.style.opacity="0";
+        #enter{
+    transition:opacity 1.2s ease, filter 1.2s ease;
+}
+
+#enter.fade-out{
+    opacity:0;
+    filter:blur(20px);
+}
+      intro.classList.add("fade-out");
 
         setTimeout(()=>{
             intro.style.display="none";
@@ -757,6 +781,21 @@ function makeParticle(){
 }
 
 setInterval(makeParticle,120);
+    .entered .card{
+    animation:
+        fadeIn .8s ease,
+        cardFloat 6s ease-in-out infinite;
+}
+
+@keyframes cardFloat{
+    0%,100%{
+        translate:0 0;
+    }
+
+    50%{
+        translate:0 -8px;
+    }
+}
 </script>
 
 <iframe
