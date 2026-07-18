@@ -90,74 +90,6 @@ body{
     pointer-events:none;
 }
 
-.enter-btn{
-    position:static;
-    display:block;
-    min-width:180px;
-    margin:auto;
-    padding:19px 46px;
-    border:1px solid rgba(139,176,255,.45);
-    border-radius:16px;
-    background:
-        linear-gradient(145deg, rgba(255,255,255,.18), rgba(39,89,255,.12) 42%, rgba(0,0,0,.38)),
-        rgba(3,11,31,.42);
-    color:white;
-    font-family:'Minecraft','Press Start 2P',monospace;
-    font-size:.96rem;
-    letter-spacing:0;
-    cursor:pointer;
-    text-shadow:
-        0 0 8px rgba(129,190,255,.95),
-        0 0 18px rgba(42,99,255,.8);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.28),
-        inset 0 -18px 34px rgba(0,0,0,.24),
-        0 0 22px rgba(68,122,255,.45),
-        0 18px 55px rgba(0,0,0,.54);
-    backdrop-filter:blur(18px) saturate(1.4);
-    overflow:hidden;
-    pointer-events:auto;
-    transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
-}
-
-.enter-btn::before{
-    content:"";
-    position:absolute;
-    inset:-2px;
-    background:
-        linear-gradient(115deg, transparent 8%, rgba(255,255,255,.52) 18%, transparent 28%),
-        linear-gradient(40deg, transparent 44%, rgba(95,154,255,.5) 45%, transparent 48%);
-    transform:translateX(-130%);
-    transition:transform .5s ease;
-}
-
-.enter-btn::after{
-    content:"";
-    position:absolute;
-    inset:8px;
-    border:1px solid rgba(255,255,255,.16);
-    border-radius:11px;
-    pointer-events:none;
-}
-
-.enter-btn:hover{
-    transform:translateY(-3px) scale(1.04);
-    border-color:rgba(191,215,255,.82);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.38),
-        inset 0 -18px 34px rgba(0,0,0,.2),
-        0 0 34px rgba(92,151,255,.78),
-        0 24px 70px rgba(0,0,0,.6);
-}
-
-.enter-btn:hover::before{
-    transform:translateX(120%);
-}
-
-.enter-btn span{
-    position:relative;
-    z-index:1;
-}
 
 .main{
     display:none;
@@ -489,26 +421,44 @@ body{
 
 /* ...all the new CSS I gave you... */
 
-@keyframes fadeIn{
-    from{
-        opacity:0;
-        transform:translateY(20px);
+/* ========= CINEMATIC INTRO ========= */
+
+#cross{
+    width:180px;
+    position:relative;
+    z-index:5;
+    cursor:pointer;
+    user-select:none;
+    animation:pulseCross 3s ease-in-out infinite;
+    filter:
+        drop-shadow(0 0 12px white)
+        drop-shadow(0 0 35px white);
+}
+
+#cross:hover{
+    transform:scale(1.04);
+}
+
+@keyframes pulseCross{
+    0%,100%{
+        transform:scale(1);
+        filter:
+        drop-shadow(0 0 12px white)
+        drop-shadow(0 0 35px white);
     }
-    to{
-        opacity:1;
-        transform:translateY(0);
+
+    50%{
+        transform:scale(1.08);
+        filter:
+        drop-shadow(0 0 30px white)
+        drop-shadow(0 0 70px white);
     }
 }
-@keyframes fadeIn{
-    from{
-        opacity:0;
-        transform:translateY(20px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0);
-    }
-}
+
+
+
+
+
 
 @keyframes enterRipple{
     0%{
@@ -607,13 +557,10 @@ body{
 <div class="glow g2"></div>
 <div class="diamond-cursor" id="diamondCursor"></div>
 
-<div id="enter">
-    <div class="enter-center" style="position:fixed;inset:0;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;z-index:1002;pointer-events:none;">
-        <button class="enter-btn" onclick="enterSite()">
-            <span>ENTER</span>
-        </button>
-    </div>
+<div class="enter-center">
+    <img id="cross" src="cross.png" onclick="enterSite()">
 </div>
+
 
 <div class="main" id="main">
 
@@ -667,19 +614,22 @@ let musicPlayer;
 
 function enterSite(){
 
-    document.body.classList.add("entered");
+    const cross = document.getElementById("cross");
 
-    const flash = document.getElementById("crossFlash");
+    cross.animate([
+        {transform:"scale(1)", opacity:1},
+        {transform:"scale(1.5)", opacity:0}
+    ],{
+        duration:700,
+        easing:"ease-out",
+        fill:"forwards"
+    });
+
+    document.body.classList.add("entered");
+  
     const intro = document.getElementById("enter");
 
-    flash.animate([
-        { opacity: 0 },
-        { opacity: 1 },
-        { opacity: 0 }
-    ],{
-        duration:500,
-        easing:"ease-out"
-    });
+    
 
     setTimeout(()=>{
         intro.style.transition="opacity 1.2s ease";
@@ -691,10 +641,27 @@ function enterSite(){
         },1200);
     },250);
 
-    if(musicPlayer){
+     if(musicPlayer){
+
+        musicPlayer.setVolume(0);
         musicPlayer.play();
+
+        let volume = 0;
+
+        const fade = setInterval(()=>{
+
+            volume += 5;
+            musicPlayer.setVolume(volume);
+
+            if(volume >= 100){
+                clearInterval(fade);
+            }
+
+        },100);
+
     }
-}
+
+} 
 
 window.addEventListener("load", ()=>{
     musicPlayer=SC.Widget(document.getElementById("bgm"));
@@ -763,6 +730,33 @@ function dropSnowflake(){
 }
 
 setInterval(dropSnowflake, 85);
+const particles=document.getElementById("particles");
+
+function makeParticle(){
+
+    const p=document.createElement("div");
+
+    p.className="particle";
+
+    p.style.left=Math.random()*100+"%";
+    p.style.bottom="-10px";
+
+    const size=2+Math.random()*5;
+
+    p.style.width=size+"px";
+    p.style.height=size+"px";
+
+    p.style.animationDuration=(4+Math.random()*5)+"s";
+
+    particles.appendChild(p);
+
+    setTimeout(()=>{
+        p.remove();
+    },9000);
+
+}
+
+setInterval(makeParticle,120);
 </script>
 
 <iframe
