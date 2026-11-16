@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#030713" />
+  <title>Into the Night</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; background: #02040b; }
+    body { overflow: hidden; font-family: Arial, Helvetica, sans-serif; }
+    .intro {
+      position: relative;
+      width: 100%;
+      height: 100svh;
+      min-height: 480px;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(ellipse at 50% 48%, rgba(31,75,190,.22), transparent 55%),
+        #02040b;
+    }
+    .art {
+      position: absolute;
+      inset: -3%;
+      width: 106%;
+      height: 106%;
+      object-fit: cover;
+      object-position: center;
+      filter: url(#liquid) saturate(1.08) contrast(1.06);
+      transform: scale(1.035);
+      animation: drift 12s ease-in-out infinite alternate;
+      will-change: transform, filter;
+    }
+    .shade {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.16), transparent 27%, transparent 68%, rgba(0,0,0,.34)),
+        radial-gradient(ellipse at center, transparent 43%, rgba(0,0,0,.5) 100%);
+      z-index: 1;
+    }
+    .blue-glow {
+      position: absolute;
+      inset: -20%;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 55%, rgba(35,91,255,.12), transparent 48%);
+      mix-blend-mode: screen;
+      animation: glow 7s ease-in-out infinite alternate;
+    }
+    .grain {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: .11;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+    }
+    .edge {
+      position: absolute;
+      inset: 12px;
+      z-index: 3;
+      border: 1px solid rgba(130,165,255,.13);
+      pointer-events: none;
+    }
+    @keyframes drift {
+      0% { transform: scale(1.035) translate3d(-.35%, .15%, 0); }
+      100% { transform: scale(1.09) translate3d(.35%, -.2%, 0); }
+    }
+    @keyframes glow {
+      from { opacity: .45; transform: translate3d(-1%, 1%, 0) scale(.98); }
+      to { opacity: .95; transform: translate3d(1%, -1%, 0) scale(1.04); }
+    }
+
+
+    .soundtrack {
+      position: fixed;
+      width: 200px;
+      height: 200px;
+      left: -220px;
+      bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    @media (max-width: 700px) {
+      .music-card { left: 16px; bottom: 16px; width: 206px; }
+      #music-player, #music-player iframe { width: 186px; height: 105px; }
+    }
+    @media (max-width: 360px) {
+      .music-card { transform: scale(.88); transform-origin: bottom left; }
+    }
+    @media (max-width: 700px) {
+      .art { object-position: 48% center; }
+      .edge { inset: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .art, .blue-glow { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="intro" aria-label="Batman-inspired animated opening image">
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+      <filter id="liquid" x="-10%" y="-10%" width="120%" height="120%">
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.008 0.014"
+          numOctaves="2"
+          seed="8"
+          result="noise">
+          <animate attributeName="baseFrequency"
+            dur="9s"
+            values="0.007 0.012;0.012 0.018;0.008 0.015;0.007 0.012"
+            repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise"
+          scale="13" xChannelSelector="R" yChannelSelector="G">
+          <animate attributeName="scale" dur="7s"
+            values="8;17;11;8" repeatCount="indefinite" />
+        </feDisplacementMap>
+      </filter>
+    </svg>
+
+    <img class="art" src="assets/batman.jpg" alt="Dark blue illustration of Batman" />
+    <div class="blue-glow"></div>
+    <div class="shade"></div>
+    <div class="grain"></div>
+    <div class="edge"></div>
+
+    <div id="music-player" class="soundtrack" aria-hidden="true"></div>
+  </main>
+
+  <script>
+    // Hidden background soundtrack. Browsers require a user gesture for audio.
+    // Remember the first click even if YouTube's player has not finished loading yet.
+    let soundtrack;
+    let visitorHasInteracted = false;
+    let soundtrackStarted = false;
+
+    function startSoundtrack() {
+      visitorHasInteracted = true;
+      if (!soundtrack || soundtrackStarted) return;
+      try {
+        soundtrack.setVolume(16);
+        soundtrack.unMute();
+        soundtrack.playVideo();
+        soundtrackStarted = true;
+      } catch (error) {
+        // The next user interaction can retry if the browser has not finished loading.
+        soundtrackStarted = false;
+      }
+    }
+
+    function onYouTubeIframeAPIReady() {
+      soundtrack = new YT.Player('music-player', {
+        width: '200',
+        height: '200',
+        videoId: '55dz3B4rzaA',
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          loop: 1,
+          playlist: '55dz3B4rzaA'
+        },
+        events: {
+          onReady: function (event) {
+            event.target.setVolume(16);
+            if (visitorHasInteracted) startSoundtrack();
+          },
+          onStateChange: function (event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+              event.target.setVolume(16);
+            }
+          },
+          onError: function (event) {
+            console.warn('The background video could not be embedded. YouTube error:', event.data);
+          }
+        }
+      });
+    }
+
+    // Don't use { once: true }: a click before player-ready must not be lost.
+    document.addEventListener('pointerdown', startSoundtrack);
+    document.addEventListener('keydown', startSoundtrack);
+
+    (function loadYouTubeAPI() {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.async = true;
+      document.head.appendChild(tag);
+    })();
+  </script>
+</body>
+</html>
